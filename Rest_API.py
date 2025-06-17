@@ -1,41 +1,9 @@
 # File: Rest_API.py
 
 from flask import Flask, request, jsonify
+import json
 
 app = Flask(__name__)
-
-# This function returns cleaned data from a sample (for topic.py use)
-def get_cleaned_sample_data():
-    # You can replace this with real data or a CSV reader
-    sample_data = [
-        {"sepal_length": 5.1, "sepal_width": 3.5, "petal_length": 1.4, "petal_width": 0.2},
-        {"sepal_length": 6.2, "sepal_width": 2.9, "petal_length": 4.3, "petal_width": 1.3},
-    ]
-
-    valid_ranges = {
-        'sepal_length': (4.0, 8.0),
-        'sepal_width': (2.0, 4.5),
-        'petal_length': (1.0, 7.0),
-        'petal_width': (0.1, 2.5)
-    }
-
-    cleaned = []
-    for record in sample_data:
-        try:
-            cleaned_record = {}
-            for key, val in record.items():
-                val = float(val)
-                min_val, max_val = valid_ranges[key]
-                if min_val <= val <= max_val:
-                    cleaned_record[key] = val
-                else:
-                    raise ValueError(f"{key} out of range")
-            cleaned.append(cleaned_record)
-        except:
-            continue  # Skip invalid rows
-
-    return cleaned
-
 
 @app.route('/message', methods=['POST'])
 def message():
@@ -62,6 +30,10 @@ def message():
             if not (min_val <= value <= max_val):
                 return jsonify({"status": "error", "message": f"{field} must be between {min_val} and {max_val}"}), 400
             cleaned_data[field] = value
+
+        # Save cleaned data to a temporary file
+        with open("message_buffer.json", "w") as f:
+            json.dump(cleaned_data, f)
 
         return jsonify({"status": "success", "received_message": cleaned_data}), 200
 
